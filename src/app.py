@@ -166,6 +166,7 @@ TEXT = {
         "json_too_small": "Selected JSON has far fewer drawable layers than the usable template capacity. Import will look blurry; choose a higher-layer JSON.",
         "json_needs_more_template_layers": "FH needs 4 boundary layers for correct cover/apply behavior. Use a template with at least JSON drawable layers + 4.",
         "safe_stop": "Stopped before writing because no safe FH6 template was found.",
+        "too_many_count_hits": "The template layer count matched too many memory locations, so FH6 could not be located safely. Make sure the vinyl editor is open, the template is ungrouped, and the number is the exact in-game layer count. If it still fails, try a template with a less common layer count such as 704, 1004, 1504, or 3000.",
         "tutorial": """Beginner workflow
 
 1. Install 64-bit Python 3.12 if possible, then run install_dependencies.bat.
@@ -311,6 +312,7 @@ Notes
         "json_too_small": "当前 JSON 可绘制层数远少于模板可用容量，导入会很糊；请换用更高层数的 JSON。",
         "json_needs_more_template_layers": "FH 需要预留 4 个边界层，才能正常保存封面和贴到车上。模板层数建议至少为 JSON 可绘制层数 + 4。",
         "safe_stop": "未找到安全 FH6 模板，已在写入前停止。",
+        "too_many_count_hits": "模板层数在内存中匹配到太多位置，因此无法安全定位 FH6。请确认 Vinyl 编辑器已打开、模板已 ungroup，并且填写的是游戏中显示的精确层数。如果仍失败，请尝试 704、1004、1504 或 3000 这类不太常见的模板层数。",
         "tutorial": """小白流程
 
 1. 尽量安装 64 位 Python 3.12，然后运行 install_dependencies.bat。
@@ -456,6 +458,7 @@ Notes
         "json_too_small": "선택한 JSON의 그릴 수 있는 레이어 수가 템플릿 사용 가능 용량보다 훨씬 적습니다. 가져오면 흐릿해 보이므로 더 높은 레이어 JSON을 선택하세요.",
         "json_needs_more_template_layers": "FH는 커버 저장과 적용 범위를 올바르게 처리하려면 경계 레이어 4개가 필요합니다. JSON의 그릴 수 있는 레이어 수 + 4 이상인 템플릿을 사용하세요.",
         "safe_stop": "안전한 FH6 템플릿을 찾지 못해 쓰기 전에 중지했습니다.",
+        "too_many_count_hits": "입력한 템플릿 레이어 수와 같은 값이 메모리에서 너무 많이 발견되어 FH6 위치를 안전하게 찾지 못했습니다. 비닐 편집기가 열려 있고 템플릿이 ungroup 상태인지, 게임에 표시된 정확한 레이어 수를 입력했는지 확인하세요. 계속 실패하면 704, 1004, 1504, 3000처럼 덜 흔한 레이어 수의 템플릿을 사용해 보세요.",
         "tutorial": """초보자용 작업 순서
 
 1. 가능하면 64비트 Python 3.12를 설치한 뒤 install_dependencies.bat을 실행하세요.
@@ -1887,6 +1890,8 @@ class App:
         )
         if any(part in lower for part in noisy_parts):
             return None
+        if "stopped fh6 layout-count scan after" in lower and "count hits" in lower:
+            return tr(self.lang, "too_many_count_hits")
         if "fast fh6 layer group candidates:" in lower:
             return tr(self.lang, "located")
         if "no safe fh6 layer group" in lower:
