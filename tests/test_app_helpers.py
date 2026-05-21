@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from app import clamp_parallel_jobs
+from app import clamp_parallel_jobs, load_app_preferences, save_app_preferences
 
 
 def test_clamp_parallel_jobs_accepts_valid_values():
@@ -17,3 +17,18 @@ def test_clamp_parallel_jobs_limits_invalid_or_extreme_values():
     assert clamp_parallel_jobs("abc") == 1
     assert clamp_parallel_jobs("0") == 1
     assert clamp_parallel_jobs("99") == 4
+
+
+def test_app_preferences_round_trip_language(tmp_path):
+    path = tmp_path / "preferences.json"
+
+    save_app_preferences({"language": "ko"}, path)
+
+    assert load_app_preferences(path) == {"language": "ko"}
+
+
+def test_app_preferences_ignore_invalid_json(tmp_path):
+    path = tmp_path / "preferences.json"
+    path.write_text("{not json", encoding="utf-8")
+
+    assert load_app_preferences(path) == {}

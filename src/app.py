@@ -25,6 +25,7 @@ from version import APP_DISPLAY_NAME, __version__, app_title
 APP_DIR = Path(__file__).resolve().parent
 ROOT = APP_DIR.parent
 PROBE_DIR = ROOT / "webui-data" / "probes"
+PREFERENCES_PATH = ROOT / "runtime" / "preferences.json"
 SESSION_PATH = PROBE_DIR / "current-fh6-session.json"
 MEMORY_SNAPSHOT_LIMIT_MB = 2048
 PREVIEW_MAX = 520
@@ -41,6 +42,7 @@ LANGUAGES = {
     "中文": "zh",
     "한국어": "ko",
 }
+LANGUAGE_LABELS = {value: key for key, value in LANGUAGES.items()}
 
 
 TEXT = {
@@ -56,6 +58,7 @@ TEXT = {
         "tutorial_tab": "Tutorial",
         "images": "Images",
         "add_images": "Add images",
+        "remove_images": "Remove selected",
         "quality": "Quality profile",
         "custom_settings": "Use custom settings",
         "custom_layers": "Output layers",
@@ -200,6 +203,7 @@ Notes
         "tutorial_tab": "教程",
         "images": "图片",
         "add_images": "添加图片",
+        "remove_images": "移除所选",
         "quality": "品质配置",
         "custom_settings": "使用自定义参数",
         "custom_layers": "输出层数",
@@ -344,6 +348,7 @@ Notes
         "tutorial_tab": "튜토리얼",
         "images": "이미지",
         "add_images": "이미지 추가",
+        "remove_images": "선택 삭제",
         "quality": "품질 프로필",
         "custom_settings": "사용자 설정 사용",
         "custom_layers": "출력 레이어",
@@ -485,6 +490,20 @@ def ensure_dirs():
 
 def tr(lang, key):
     return TEXT[lang].get(key, TEXT["en"].get(key, key))
+
+
+def load_app_preferences(path=PREFERENCES_PATH):
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_app_preferences(preferences, path=PREFERENCES_PATH):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dict(preferences), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def clamp_parallel_jobs(value):
@@ -659,7 +678,8 @@ class App:
         self.root = Tk()
         self.root.title(app_title())
         self.root.geometry("1180x780")
-        self.lang = "en"
+        self.preferences = load_app_preferences()
+        self.lang = self.preferences.get("language") if self.preferences.get("language") in TEXT else "en"
         self.queue = queue.Queue()
         self.shutdown_event = threading.Event()
         self.active_processes = set()
@@ -704,6 +724,7 @@ class App:
         self.inspect_table_value = StringVar()
         self.advanced_visible = False
         self._build()
+        self._refresh_language()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.refresh_processes()
         if self.settings:
@@ -801,7 +822,7 @@ class App:
         right.pack(side=RIGHT)
         self._label(right, "language").pack(anchor="e")
         self.lang_combo = ttk.Combobox(right, values=list(LANGUAGES.keys()), state="readonly", width=10)
-        self.lang_combo.set("English")
+        self.lang_combo.set(LANGUAGE_LABELS.get(self.lang, "English"))
         self.lang_combo.pack(anchor="e")
         self.lang_combo.bind("<<ComboboxSelected>>", self._on_language)
 
@@ -873,6 +894,7 @@ class App:
         row.pack(fill=X, padx=10, pady=(6, 2))
         self._label(row, "images").pack(side=LEFT)
         self._button(row, "add_images", self.add_images).pack(side=RIGHT)
+        self._button(row, "remove_images", self.remove_selected_images).pack(side=RIGHT, padx=(0, 8))
         self.image_list = Listbox(step1, height=5)
         self.image_list.pack(fill=X, padx=10, pady=(2, 8))
         self.image_list.bind("<<ListboxSelect>>", self._preview_selected_image)
@@ -1062,6 +1084,11 @@ class App:
 
     def _on_language(self, _event=None):
         self.lang = LANGUAGES.get(self.lang_combo.get(), "en")
+        self.preferences["language"] = self.lang
+        save_app_preferences(self.preferences)
+        self._refresh_language()
+
+    def _refresh_language(self):
         for widget, key, option in self.translated:
             try:
                 widget.config(**{option: tr(self.lang, key)})
@@ -1413,6 +1440,20 @@ class App:
         self._render_lists()
         if files:
             self.show_preview(render_source_image(Path(files[0])))
+
+    def remove_selected_images(self):
+        selection = list(self.image_list.curselection())
+        if not selection:
+            self.log_line(tr(self.lang, "no_images_selected"))
+            return
+        for index in reversed(selection):
+            try:
+                del self.images[index]
+            except IndexError:
+                pass
+        self._render_lists()
+        if not self.images:
+            self.show_preview(None)
 
     def add_json(self):
         files = filedialog.askopenfilenames(
