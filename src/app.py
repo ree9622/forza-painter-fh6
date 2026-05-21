@@ -136,7 +136,8 @@ TEXT = {
         "import_preview": "Selected JSON preview",
         "game_profile": "Game profile",
         "pid": "PID",
-        "layer_count": "Template layer count",
+        "layer_count": "In-game template layer count",
+        "common_layer_count_warning": "{count} is a common value and may be hard to locate in FH6 memory. This field is the layer count shown by the ungrouped FH6 template, not the generated JSON layer count. If locating fails, use a template with 504, 704, 1004, 1504, or 3000 layers and enter that exact number.",
         "easy_import": "Easy import",
         "easy_import_hint": "For FH6, leave addresses empty. The app will reuse a live session or auto-locate before import.",
         "manual_count": "Layer count address",
@@ -282,7 +283,8 @@ Notes
         "import_preview": "已选 JSON 预览",
         "game_profile": "游戏 profile",
         "pid": "PID",
-        "layer_count": "模板层数",
+        "layer_count": "游戏内模板层数",
+        "common_layer_count_warning": "{count} 是很常见的数值，可能难以在 FH6 内存中安全定位。这里要填的是 FH6 中 ungroup 后模板显示的层数，不是生成的 JSON 层数。如果定位失败，请使用 504、704、1004、1504 或 3000 层模板，并填写游戏显示的准确数字。",
         "easy_import": "简化导入",
         "easy_import_hint": "FH6 通常不需要手填地址。留空即可复用当前 session，或在导入前自动定位。",
         "manual_count": "层数地址",
@@ -428,7 +430,8 @@ Notes
         "import_preview": "선택한 JSON 미리보기",
         "game_profile": "게임 프로필",
         "pid": "PID",
-        "layer_count": "템플릿 레이어 수",
+        "layer_count": "게임 템플릿 레이어 수",
+        "common_layer_count_warning": "{count}은 흔한 숫자라 FH6 메모리에서 찾기 어려울 수 있습니다. 여기는 생성된 JSON 레이어 수가 아니라 FH6에서 ungroup한 템플릿에 표시되는 레이어 수를 넣는 곳입니다. 찾기 실패 시 504, 704, 1004, 1504, 3000 레이어 템플릿을 쓰고 게임에 표시된 정확한 숫자를 입력하세요.",
         "easy_import": "간편 가져오기",
         "easy_import_hint": "FH6에서는 주소를 비워두세요. 앱이 현재 세션을 재사용하거나 가져오기 전에 자동으로 찾습니다.",
         "manual_count": "레이어 수 주소",
@@ -1866,6 +1869,11 @@ class App:
         if json_layers and usable_layers and json_layers < usable_layers * 0.75:
             self.queue.put(("log", f"{tr(self.lang, 'json_too_small')} JSON={json_layers}, usable={usable_layers}"))
 
+    def _warn_common_layer_count(self, layer_count):
+        value = str(layer_count or "").strip()
+        if value in {"500", "700", "1000", "1500", "1800", "2500"}:
+            self.queue.put(("log", tr(self.lang, "common_layer_count_warning").format(count=value)))
+
     def _friendly_subprocess_line(self, line):
         if not line:
             return None
@@ -1916,6 +1924,7 @@ class App:
         if not pid or not layer_count:
             self.log_line(tr(self.lang, "pid_template_required"))
             return
+        self._warn_common_layer_count(layer_count)
         self.status.set(tr(self.lang, "running"))
         threading.Thread(target=self._auto_locate_worker, args=(pid, layer_count), daemon=True).start()
 
@@ -1959,6 +1968,7 @@ class App:
         pid = self.ensure_live_game_pid()
         if not pid:
             return
+        self._warn_common_layer_count(self.layer_count.get().strip())
         self.status.set(tr(self.lang, "running"))
         threading.Thread(target=self._import_worker, args=(pid,), daemon=True).start()
 
