@@ -622,8 +622,12 @@ def render_source_image(path):
     loaded = load_cv2()
     if not loaded:
         return None
-    cv2, _np = loaded
-    image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+    cv2, np = loaded
+    try:
+        raw = np.fromfile(str(path), dtype=np.uint8)
+    except OSError:
+        return None
+    image = cv2.imdecode(raw, cv2.IMREAD_COLOR)
     if image is None:
         return None
     return image_to_photo(image)
