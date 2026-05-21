@@ -67,6 +67,39 @@ TEXT = {
         "custom_panel_hint": "The selected preset fills these values. Enable custom settings if you want to edit them before generating.",
         "parallel_jobs": "Parallel jobs",
         "parallel_jobs_hint": "Run multiple images at once. Use 1 for stability; 2-4 can be faster but use much more GPU memory.",
+        "choose_images_title": "Choose images",
+        "images_filetype": "Images",
+        "all_files": "All files",
+        "choose_json_title": "Choose geometry JSON",
+        "geometry_json_filetype": "Geometry JSON",
+        "generation_already_running": "Generation is already running. Wait for it to finish or use Stop current generation.",
+        "no_images_selected": "No images selected.",
+        "no_quality_profile": "No quality profile selected.",
+        "missing_generator": "Missing generator: {path}",
+        "selected_profile_log": "Selected profile: {profile}",
+        "generation_queue_log": "Generation queue: {count} image(s), {jobs} parallel job(s).",
+        "parallel_single_hint": "Parallel jobs only help when 2 or more images are queued.",
+        "generating_log": "Generating {path}",
+        "running_generator_log": "Running GPU generator with {profile}",
+        "generator_no_output": "Generator finished but no JSON output was found.",
+        "generated_log": "Generated {path}",
+        "added_outputs_log": "Added {count} generated JSON file(s) to import list.",
+        "high_quality_generation": "High quality generation selected: layers={layers}, randomSamples={random}, mutatedSamples={mutated}, maxResolution={resolution}. Large images can take hours. For quick batches, use fast/extremely fast or custom Max resolution 600-800 and Random samples 30000-60000.",
+        "starting_helper": "Starting helper...",
+        "timed_out": "Timed out after {seconds} seconds.",
+        "selected_pid_stale": "Selected game process pid {pid} is no longer running; refreshing process list.",
+        "no_live_game": "No live supported game process is selected. Start FH6, then click Refresh.",
+        "pid_template_required": "PID and template layer count are required.",
+        "no_json_selected": "No JSON files selected.",
+        "pid_layer_table_required": "PID, layer count, and table address are required.",
+        "pid_snapshot_required": "PID and snapshot layer count are required.",
+        "pid_snapshot_current_required": "PID, snapshot layer count, and current layer count are required.",
+        "no_settings_profiles": "No settings profiles found.",
+        "export_logs_title": "Export detailed log",
+        "text_log_filetype": "Text log",
+        "export_logs_failed": "Failed to export detailed log: {error}",
+        "export_logs_done": "Detailed log exported: {path} ({chars} chars, limit {limit}).",
+        "generator_failed": "Generator failed: {error}",
         "generate_step_image": "Step 1 - Choose images",
         "generate_step_image_hint": "Add PNG/JPG/BMP images. Generated JSON is saved beside each source image.",
         "generate_step_quality": "Step 2 - Choose quality",
@@ -178,6 +211,39 @@ Notes
         "custom_panel_hint": "上方预设会自动填入这些参数；勾选使用自定义参数后可直接修改。",
         "parallel_jobs": "并行任务",
         "parallel_jobs_hint": "同时处理多张图片。1 最稳定；2-4 可能更快，但会占用更多 GPU 显存。",
+        "choose_images_title": "选择图片",
+        "images_filetype": "图片",
+        "all_files": "所有文件",
+        "choose_json_title": "选择 geometry JSON",
+        "geometry_json_filetype": "Geometry JSON",
+        "generation_already_running": "当前已有生成任务在运行。请等待完成，或使用中断当前生成。",
+        "no_images_selected": "未选择图片。",
+        "no_quality_profile": "未选择品质配置。",
+        "missing_generator": "缺少生成器：{path}",
+        "selected_profile_log": "已选择配置：{profile}",
+        "generation_queue_log": "生成队列：{count} 张图片，{jobs} 个并行任务。",
+        "parallel_single_hint": "并行任务只有在队列中有 2 张或更多图片时才会加速。",
+        "generating_log": "正在生成 {path}",
+        "running_generator_log": "正在用 {profile} 运行 GPU 生成器",
+        "generator_no_output": "生成器已结束，但没有找到 JSON 输出。",
+        "generated_log": "已生成 {path}",
+        "added_outputs_log": "已将 {count} 个生成的 JSON 文件加入导入列表。",
+        "high_quality_generation": "已选择高质量生成：layers={layers}, randomSamples={random}, mutatedSamples={mutated}, maxResolution={resolution}。大图可能需要数小时。快速批量处理建议使用 fast/extremely fast，或自定义 Max resolution 600-800、Random samples 30000-60000。",
+        "starting_helper": "正在启动辅助工具...",
+        "timed_out": "{seconds} 秒后超时。",
+        "selected_pid_stale": "已选择的游戏进程 pid {pid} 已不存在，正在刷新进程列表。",
+        "no_live_game": "未选择仍在运行的受支持游戏进程。请启动 FH6，然后点击刷新。",
+        "pid_template_required": "需要 PID 和模板层数。",
+        "no_json_selected": "未选择 JSON 文件。",
+        "pid_layer_table_required": "需要 PID、层数和 table 地址。",
+        "pid_snapshot_required": "需要 PID 和快照层数。",
+        "pid_snapshot_current_required": "需要 PID、快照层数和当前层数。",
+        "no_settings_profiles": "未找到配置文件。",
+        "export_logs_title": "导出详细日志",
+        "text_log_filetype": "文本日志",
+        "export_logs_failed": "导出详细日志失败：{error}",
+        "export_logs_done": "详细日志已导出：{path}（{chars} 字符，限制 {limit}）。",
+        "generator_failed": "生成器失败：{error}",
         "generate_step_image": "第 1 步 - 选择图片",
         "generate_step_image_hint": "添加 PNG/JPG/BMP 图片。生成的 JSON 会保存在原图片旁边。",
         "generate_step_quality": "第 2 步 - 选择品质",
@@ -289,6 +355,39 @@ Notes
         "custom_panel_hint": "선택한 프리셋 값이 자동으로 채워집니다. 생성 전에 값을 바꾸려면 사용자 설정을 켜세요.",
         "parallel_jobs": "병렬 작업",
         "parallel_jobs_hint": "여러 이미지를 동시에 처리합니다. 안정성은 1이 가장 좋고, 2~4는 더 빠를 수 있지만 GPU 메모리를 훨씬 많이 씁니다.",
+        "choose_images_title": "이미지 선택",
+        "images_filetype": "이미지",
+        "all_files": "모든 파일",
+        "choose_json_title": "geometry JSON 선택",
+        "geometry_json_filetype": "Geometry JSON",
+        "generation_already_running": "이미 생성 작업이 실행 중입니다. 완료를 기다리거나 현재 생성 중지를 사용하세요.",
+        "no_images_selected": "선택한 이미지가 없습니다.",
+        "no_quality_profile": "선택한 품질 프로필이 없습니다.",
+        "missing_generator": "생성기를 찾을 수 없습니다: {path}",
+        "selected_profile_log": "선택한 프로필: {profile}",
+        "generation_queue_log": "생성 큐: 이미지 {count}개, 병렬 작업 {jobs}개.",
+        "parallel_single_hint": "병렬 작업은 이미지가 2개 이상일 때만 속도에 도움이 됩니다.",
+        "generating_log": "{path} 생성 중",
+        "running_generator_log": "{profile}로 GPU 생성기 실행 중",
+        "generator_no_output": "생성기는 종료됐지만 JSON 출력을 찾지 못했습니다.",
+        "generated_log": "{path} 생성됨",
+        "added_outputs_log": "생성된 JSON 파일 {count}개를 가져오기 목록에 추가했습니다.",
+        "high_quality_generation": "고품질 생성이 선택되었습니다: layers={layers}, randomSamples={random}, mutatedSamples={mutated}, maxResolution={resolution}. 큰 이미지는 몇 시간이 걸릴 수 있습니다. 빠른 배치 작업은 fast/extremely fast를 쓰거나 사용자 설정에서 Max resolution 600-800, Random samples 30000-60000을 권장합니다.",
+        "starting_helper": "도우미 실행 중...",
+        "timed_out": "{seconds}초 후 시간 초과되었습니다.",
+        "selected_pid_stale": "선택한 게임 프로세스 pid {pid}가 더 이상 실행 중이 아니어서 프로세스 목록을 새로고침합니다.",
+        "no_live_game": "실행 중인 지원 게임 프로세스가 선택되지 않았습니다. FH6를 시작한 뒤 새로고침을 누르세요.",
+        "pid_template_required": "PID와 템플릿 레이어 수가 필요합니다.",
+        "no_json_selected": "선택한 JSON 파일이 없습니다.",
+        "pid_layer_table_required": "PID, 레이어 수, 테이블 주소가 필요합니다.",
+        "pid_snapshot_required": "PID와 스냅샷 레이어 수가 필요합니다.",
+        "pid_snapshot_current_required": "PID, 스냅샷 레이어 수, 현재 레이어 수가 필요합니다.",
+        "no_settings_profiles": "설정 프로필을 찾지 못했습니다.",
+        "export_logs_title": "자세한 로그 내보내기",
+        "text_log_filetype": "텍스트 로그",
+        "export_logs_failed": "자세한 로그 내보내기 실패: {error}",
+        "export_logs_done": "자세한 로그를 내보냈습니다: {path} ({chars}자, 제한 {limit}).",
+        "generator_failed": "생성기 실패: {error}",
         "generate_step_image": "1단계 - 이미지 선택",
         "generate_step_image_hint": "PNG/JPG/BMP 이미지를 추가하세요. 생성된 JSON은 원본 이미지 옆에 저장됩니다.",
         "generate_step_quality": "2단계 - 품질 선택",
@@ -608,7 +707,7 @@ class App:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.refresh_processes()
         if self.settings:
-            self.selected_profile.set(self.settings[min(2, len(self.settings) - 1)]["label"])
+            self.selected_profile.set(self.settings[min(1, len(self.settings) - 1)]["label"])
             self._update_setting_description()
         self._render_lists()
         self._poll_queue()
@@ -988,7 +1087,7 @@ class App:
 
     def _update_setting_description(self, _event=None):
         item = self._selected_setting()
-        self.setting_description.config(text=item["description"] if item else "No settings profiles found.")
+        self.setting_description.config(text=item["description"] if item else tr(self.lang, "no_settings_profiles"))
         if item and self.use_custom_settings.get() != "1":
             values = item.get("values", {})
             self.custom_stop_at.set(values.get("stopAt", "3000"))
@@ -1136,10 +1235,10 @@ class App:
     def export_detailed_log(self):
         initial = f"forza-painter-fh6-log-{datetime.now().strftime('%Y%m%d-%H%M%S')}.txt"
         output = filedialog.asksaveasfilename(
-            title="Export detailed log",
+            title=tr(self.lang, "export_logs_title"),
             defaultextension=".txt",
             initialfile=initial,
-            filetypes=[("Text log", "*.txt"), ("All files", "*.*")],
+            filetypes=[(tr(self.lang, "text_log_filetype"), "*.txt"), (tr(self.lang, "all_files"), "*.*")],
         )
         if not output:
             return
@@ -1147,9 +1246,9 @@ class App:
         try:
             Path(output).write_text(text, encoding="utf-8")
         except OSError as exc:
-            self.log_line(f"Failed to export detailed log: {exc}")
+            self.log_line(tr(self.lang, "export_logs_failed").format(error=exc))
             return
-        self.log_line(f"Detailed log exported: {output} ({len(text)} chars, limit {DETAILED_LOG_OUTPUT_LIMIT}).")
+        self.log_line(tr(self.lang, "export_logs_done").format(path=output, chars=len(text), limit=DETAILED_LOG_OUTPUT_LIMIT))
 
     def _reset_generation_eta(self):
         self.eta_intervals.clear()
@@ -1221,6 +1320,12 @@ class App:
         progress = re.match(r"\[(\d+)/(\d+)\]\s+(.*)", text)
         if progress:
             current, total, detail = progress.groups()
+            if "Generating random samples" in detail:
+                return f"Layer {current}/{total}: sampling candidates"
+            if "Evaluating random sample batch" in detail:
+                return f"Layer {current}/{total}: evaluating candidates on GPU"
+            if "Hill climb best delta" in detail:
+                return f"Layer {current}/{total}: optimizing best shape"
             if "Added rotated ellipse" in detail:
                 return f"Generated layer {current}/{total}"
             if "Saved geometry checkpoint" in detail:
@@ -1249,7 +1354,11 @@ class App:
             return last_message
         display = f"{prefix}: {friendly}" if prefix else friendly
         if friendly.startswith("Generated layer "):
-            message = self._progress_with_eta(friendly) if show_eta else display
+            if show_eta:
+                eta_message = self._progress_with_eta(friendly)
+                message = f"{prefix}: {eta_message}" if prefix else eta_message
+            else:
+                message = display
             self.queue.put(("progress", message))
             self.queue.put(("log", message))
             return friendly
@@ -1269,14 +1378,13 @@ class App:
         random_samples = self._int_setting(setting, "randomSamples")
         mutated_samples = self._int_setting(setting, "mutatedSamples")
         max_resolution = self._int_setting(setting, "maxResolution")
-        if random_samples >= 200000 or mutated_samples >= 8000 or max_resolution >= 2000:
-            self.queue.put((
-                "log",
-                "High quality generation selected: "
-                f"layers={stop_at}, randomSamples={random_samples}, "
-                f"mutatedSamples={mutated_samples}, maxResolution={max_resolution}. "
-                "The first layer can take a long time before progress appears.",
-            ))
+        if stop_at >= 1800 or random_samples >= 100000 or mutated_samples >= 5000 or max_resolution >= 1000:
+            self.queue.put(("log", tr(self.lang, "high_quality_generation").format(
+                layers=stop_at,
+                random=random_samples,
+                mutated=mutated_samples,
+                resolution=max_resolution,
+            )))
 
     def _generator_exit_message(self, returncode):
         if returncode in (3221225477, -1073741819):
@@ -1295,8 +1403,8 @@ class App:
 
     def add_images(self):
         files = filedialog.askopenfilenames(
-            title="Choose images",
-            filetypes=[("Images", "*.png *.jpg *.jpeg *.bmp"), ("All files", "*.*")],
+            title=tr(self.lang, "choose_images_title"),
+            filetypes=[(tr(self.lang, "images_filetype"), "*.png *.jpg *.jpeg *.bmp"), (tr(self.lang, "all_files"), "*.*")],
         )
         for item in files:
             path = Path(item)
@@ -1308,8 +1416,8 @@ class App:
 
     def add_json(self):
         files = filedialog.askopenfilenames(
-            title="Choose geometry JSON",
-            filetypes=[("Geometry JSON", "*.json"), ("All files", "*.*")],
+            title=tr(self.lang, "choose_json_title"),
+            filetypes=[(tr(self.lang, "geometry_json_filetype"), "*.json"), (tr(self.lang, "all_files"), "*.*")],
         )
         for item in files:
             path = Path(item)
@@ -1324,7 +1432,7 @@ class App:
             if path.exists() and path not in self.json_files:
                 self.json_files.append(path)
         self._render_lists()
-        self.log_line(f"Added {len(self.outputs)} generated JSON file(s) to import list.")
+        self.log_line(tr(self.lang, "added_outputs_log").format(count=len(self.outputs)))
 
     def _preview_selected_image(self, _event=None):
         selection = self.image_list.curselection()
@@ -1406,13 +1514,13 @@ class App:
         if self._pid_matches_game(pid, game):
             return pid
         if pid:
-            self.log_line(f"Selected game process pid {pid} is no longer running; refreshing process list.")
+            self.log_line(tr(self.lang, "selected_pid_stale").format(pid=pid))
         self.refresh_processes()
         game = self.selected_game.get() or game
         pid = self.selected_pid_value()
         if self._pid_matches_game(pid, game):
             return pid
-        self.log_line("No live supported game process is selected. Start FH6, then click Refresh.")
+        self.log_line(tr(self.lang, "no_live_game"))
         return None
 
     def stop_generate(self):
@@ -1432,24 +1540,24 @@ class App:
     def start_generate(self):
         with self.generation_lock:
             if self.generation_running:
-                self.log_line("Generation is already running. Wait for it to finish or use Stop current generation.")
+                self.log_line(tr(self.lang, "generation_already_running"))
                 return
             self.generation_running = True
         if not self.images:
             with self.generation_lock:
                 self.generation_running = False
-            self.log_line("No images selected.")
+            self.log_line(tr(self.lang, "no_images_selected"))
             return
         setting = self._effective_setting()
         if not setting:
             with self.generation_lock:
                 self.generation_running = False
-            self.log_line("No quality profile selected.")
+            self.log_line(tr(self.lang, "no_quality_profile"))
             return
         if not GENERATOR_EXE.exists():
             with self.generation_lock:
                 self.generation_running = False
-            self.log_line(f"Missing generator: {GENERATOR_EXE}")
+            self.log_line(tr(self.lang, "missing_generator").format(path=GENERATOR_EXE))
             return
         self.shutdown_event.clear()
         self._reset_generation_eta()
@@ -1465,8 +1573,10 @@ class App:
         try:
             image_paths = list(self.images)
             parallel_jobs = min(clamp_parallel_jobs(self.parallel_jobs.get()), len(image_paths) or 1)
-            self.queue.put(("log", f"Selected profile: {setting['path'].name}"))
-            self.queue.put(("log", f"Generation queue: {len(image_paths)} image(s), {parallel_jobs} parallel job(s)."))
+            self.queue.put(("log", tr(self.lang, "selected_profile_log").format(profile=setting["path"].name)))
+            self.queue.put(("log", tr(self.lang, "generation_queue_log").format(count=len(image_paths), jobs=parallel_jobs)))
+            if len(image_paths) < 2 and clamp_parallel_jobs(self.parallel_jobs.get()) > 1:
+                self.queue.put(("log", tr(self.lang, "parallel_single_hint")))
             self._log_generation_load_warning(setting)
             if parallel_jobs == 1:
                 self._reset_generation_eta()
@@ -1492,7 +1602,7 @@ class App:
             self.queue.put(("render_lists", None))
             self.queue.put(("status", tr(self.lang, "done")))
         except Exception as exc:
-            self.queue.put(("log", f"Generator failed: {exc}"))
+            self.queue.put(("log", tr(self.lang, "generator_failed").format(error=exc)))
             self.queue.put(("status", tr(self.lang, "failed")))
         finally:
             self.queue.put(("generation_done", None))
@@ -1509,12 +1619,12 @@ class App:
                 preview_path.unlink()
             except OSError:
                 pass
-        self.queue.put(("log", f"{prefix}: Generating {image_path}"))
+        self.queue.put(("log", f"{prefix}: {tr(self.lang, 'generating_log').format(path=image_path)}"))
         self.queue.put(("preview", render_source_image(image_path)))
         flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
         cmd = build_generator_command(image_path, setting)
         self._record_detail(f"GENERATOR COMMAND [{prefix}]: {self._format_command(cmd)}")
-        self.queue.put(("log", f"{prefix}: Running GPU generator with {setting['path'].name}"))
+        self.queue.put(("log", f"{prefix}: {tr(self.lang, 'running_generator_log').format(profile=setting['path'].name)}"))
         if self.shutdown_event.is_set():
             self.queue.put(("status", tr(self.lang, "stopped")))
             return False
@@ -1603,7 +1713,7 @@ class App:
         if not new_outputs and after:
             new_outputs = best_geometry_jsons(after[:1])
         if not new_outputs:
-            self.queue.put(("log", f"{prefix}: Generator finished but no JSON output was found."))
+            self.queue.put(("log", f"{prefix}: {tr(self.lang, 'generator_no_output')}"))
             self.queue.put(("status", tr(self.lang, "failed")))
             return False
         for output in new_outputs:
@@ -1612,7 +1722,7 @@ class App:
                     self.outputs.append(output)
                 if output not in self.json_files:
                     self.json_files.append(output)
-            self.queue.put(("log", f"{prefix}: Generated {output}"))
+            self.queue.put(("log", f"{prefix}: {tr(self.lang, 'generated_log').format(path=output)}"))
             preview_files = generated_preview_files(image_path)
             if preview_files:
                 self.queue.put(("preview_file", preview_files[0]))
@@ -1671,7 +1781,7 @@ class App:
                 if timeout and time.time() - started > timeout:
                     self._terminate_process(proc)
                     self._record_detail(f"HELPER EXIT: 124 timeout after {timeout} seconds")
-                    self.queue.put(("log", f"Timed out after {timeout} seconds."))
+                    self.queue.put(("log", tr(self.lang, "timed_out").format(seconds=timeout)))
                     return 124
                 time.sleep(0.05)
             if self.shutdown_event.is_set():
@@ -1693,7 +1803,7 @@ class App:
             return tr(self.lang, "locating")
         if "main.py" in joined:
             return tr(self.lang, "importing")
-        return "Starting helper..."
+        return tr(self.lang, "starting_helper")
 
     def _check_json_layer_fit(self, json_path, layer_count):
         try:
@@ -1754,7 +1864,7 @@ class App:
         pid = self.ensure_live_game_pid()
         layer_count = self.layer_count.get().strip()
         if not pid or not layer_count:
-            self.log_line("PID and template layer count are required.")
+            self.log_line(tr(self.lang, "pid_template_required"))
             return
         self.status.set(tr(self.lang, "running"))
         threading.Thread(target=self._auto_locate_worker, args=(pid, layer_count), daemon=True).start()
@@ -1794,7 +1904,7 @@ class App:
 
     def start_import(self):
         if not self.json_files:
-            self.log_line("No JSON files selected.")
+            self.log_line(tr(self.lang, "no_json_selected"))
             return
         pid = self.ensure_live_game_pid()
         if not pid:
@@ -1855,7 +1965,7 @@ class App:
         pid = self.ensure_live_game_pid()
         count = self.snapshot_count.get().strip() or self.layer_count.get().strip()
         if not pid or not count:
-            self.log_line("PID and snapshot layer count are required.")
+            self.log_line(tr(self.lang, "pid_snapshot_required"))
             return
         output_path = PROBE_DIR / f"memory-count-{count}.jsonl"
         cmd = [
@@ -1880,7 +1990,7 @@ class App:
         previous = self.snapshot_count.get().strip()
         current = self.current_count.get().strip() or self.layer_count.get().strip()
         if not pid or not previous or not current:
-            self.log_line("PID, snapshot layer count, and current layer count are required.")
+            self.log_line(tr(self.lang, "pid_snapshot_current_required"))
             return
         snapshot_path = PROBE_DIR / f"memory-count-{previous}.jsonl"
         candidates_path = PROBE_DIR / f"memory-count-{previous}-to-{current}-candidates.json"
@@ -1911,7 +2021,7 @@ class App:
         table = self.inspect_table_value.get().strip()
         count = self.layer_count.get().strip()
         if not pid or not table or not count:
-            self.log_line("PID, layer count, and table address are required.")
+            self.log_line(tr(self.lang, "pid_layer_table_required"))
             return
         cmd = [
             sys.executable,
