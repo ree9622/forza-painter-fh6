@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from tkinter import BOTH, END, LEFT, RIGHT, X, Button, Canvas, Checkbutton, Entry, Frame, Label, Listbox, PhotoImage, StringVar, Text, Tk, filedialog, ttk
@@ -31,6 +32,7 @@ DETAILED_LOG_OUTPUT_LIMIT = 50000
 DETAILED_LOG_MEMORY_LIMIT = 120000
 FH6_AUTO_LOCATE_MAX_SECONDS = 120
 FH6_AUTO_LOCATE_TIMEOUT_SECONDS = 160
+MAX_PARALLEL_GENERATION_JOBS = 4
 _CV2_CACHE = None
 _CV2_ERROR = None
 
@@ -63,6 +65,8 @@ TEXT = {
         "custom_save_at": "Save checkpoints",
         "custom_panel_title": "Custom settings",
         "custom_panel_hint": "The selected preset fills these values. Enable custom settings if you want to edit them before generating.",
+        "parallel_jobs": "Parallel jobs",
+        "parallel_jobs_hint": "Run multiple images at once. Use 1 for stability; 2-4 can be faster but use much more GPU memory.",
         "generate_step_image": "Step 1 - Choose images",
         "generate_step_image_hint": "Add PNG/JPG/BMP images. Generated JSON is saved beside each source image.",
         "generate_step_quality": "Step 2 - Choose quality",
@@ -172,6 +176,8 @@ Notes
         "custom_save_at": "保存节点",
         "custom_panel_title": "自定义参数",
         "custom_panel_hint": "上方预设会自动填入这些参数；勾选使用自定义参数后可直接修改。",
+        "parallel_jobs": "并行任务",
+        "parallel_jobs_hint": "同时处理多张图片。1 最稳定；2-4 可能更快，但会占用更多 GPU 显存。",
         "generate_step_image": "第 1 步 - 选择图片",
         "generate_step_image_hint": "添加 PNG/JPG/BMP 图片。生成的 JSON 会保存在原图片旁边。",
         "generate_step_quality": "第 2 步 - 选择品质",
@@ -281,6 +287,8 @@ Notes
         "custom_save_at": "체크포인트 저장",
         "custom_panel_title": "사용자 설정",
         "custom_panel_hint": "선택한 프리셋 값이 자동으로 채워집니다. 생성 전에 값을 바꾸려면 사용자 설정을 켜세요.",
+        "parallel_jobs": "병렬 작업",
+        "parallel_jobs_hint": "여러 이미지를 동시에 처리합니다. 안정성은 1이 가장 좋고, 2~4는 더 빠를 수 있지만 GPU 메모리를 훨씬 많이 씁니다.",
         "generate_step_image": "1단계 - 이미지 선택",
         "generate_step_image_hint": "PNG/JPG/BMP 이미지를 추가하세요. 생성된 JSON은 원본 이미지 옆에 저장됩니다.",
         "generate_step_quality": "2단계 - 품질 선택",
@@ -378,6 +386,14 @@ def ensure_dirs():
 
 def tr(lang, key):
     return TEXT[lang].get(key, TEXT["en"].get(key, key))
+
+
+def clamp_parallel_jobs(value):
+    try:
+        jobs = int(str(value).strip())
+    except (TypeError, ValueError):
+        return 1
+    return max(1, min(MAX_PARALLEL_GENERATION_JOBS, jobs))
 
 
 def game_processes():
@@ -552,6 +568,7 @@ class App:
         self.generation_lock = threading.Lock()
         self.generation_running = False
         self.current_generator_proc = None
+        self.current_generator_procs = set()
         self.eta_intervals = deque(maxlen=24)
         self.eta_last_layer = None
         self.eta_last_time = None
@@ -570,6 +587,7 @@ class App:
         self.custom_random_samples = StringVar()
         self.custom_mutated_samples = StringVar()
         self.custom_save_at = StringVar()
+        self.parallel_jobs = StringVar(value="1")
         self.translated = []
         self.detailed_log_lock = threading.Lock()
         self.detailed_log_lines = deque()
@@ -756,7 +774,7 @@ class App:
         row.pack(fill=X, padx=10, pady=(6, 2))
         self._label(row, "images").pack(side=LEFT)
         self._button(row, "add_images", self.add_images).pack(side=RIGHT)
-        self.image_list = Listbox(step1, height=3)
+        self.image_list = Listbox(step1, height=5)
         self.image_list.pack(fill=X, padx=10, pady=(2, 8))
         self.image_list.bind("<<ListboxSelect>>", self._preview_selected_image)
 
@@ -815,6 +833,18 @@ class App:
         self.translated.append((step3, "generate_step_run", "text"))
         step3.pack(fill=X)
         self._label(step3, "generate_step_run_hint", anchor="w", justify=LEFT, wraplength=540).pack(fill=X, padx=10, pady=(8, 4))
+        parallel_row = Frame(step3)
+        parallel_row.pack(fill=X, padx=10, pady=(4, 2))
+        self._label(parallel_row, "parallel_jobs").pack(side=LEFT)
+        self.parallel_combo = ttk.Combobox(
+            parallel_row,
+            values=[str(i) for i in range(1, MAX_PARALLEL_GENERATION_JOBS + 1)],
+            textvariable=self.parallel_jobs,
+            state="readonly",
+            width=6,
+        )
+        self.parallel_combo.pack(side=LEFT, padx=(8, 12))
+        self._label(parallel_row, "parallel_jobs_hint", anchor="w", justify=LEFT, wraplength=420, fg="#8a5300").pack(side=LEFT, fill=X, expand=True)
         actions = Frame(step3)
         actions.pack(fill=X, padx=10, pady=(4, 12))
         self.generate_button = self._button(actions, "start_generate", self.start_generate, font=("Segoe UI", 12, "bold"), height=2)
@@ -1214,17 +1244,18 @@ class App:
             return text
         return None
 
-    def queue_generator_message(self, friendly, last_message):
+    def queue_generator_message(self, friendly, last_message, prefix="", show_eta=True):
         if not friendly or friendly == last_message:
             return last_message
+        display = f"{prefix}: {friendly}" if prefix else friendly
         if friendly.startswith("Generated layer "):
-            message = self._progress_with_eta(friendly)
+            message = self._progress_with_eta(friendly) if show_eta else display
             self.queue.put(("progress", message))
             self.queue.put(("log", message))
             return friendly
         if friendly == "FINISHED":
-            self.queue.put(("progress", friendly))
-        self.queue.put(("log", friendly))
+            self.queue.put(("progress", display))
+        self.queue.put(("log", display))
         return friendly
 
     def _int_setting(self, setting, key, default=0):
@@ -1389,10 +1420,12 @@ class App:
             if not self.generation_running:
                 self.log_line(tr(self.lang, "no_generation_running"))
                 return
-            proc = self.current_generator_proc
+            procs = list(self.current_generator_procs)
+            if self.current_generator_proc is not None and self.current_generator_proc not in procs:
+                procs.append(self.current_generator_proc)
         self.log_line(tr(self.lang, "stopping_generation"))
         self.shutdown_event.set()
-        if proc is not None:
+        for proc in procs:
             self._terminate_process(proc)
         self.status.set(tr(self.lang, "stopped"))
 
@@ -1430,126 +1463,32 @@ class App:
 
     def _generate_worker(self, setting):
         try:
+            image_paths = list(self.images)
+            parallel_jobs = min(clamp_parallel_jobs(self.parallel_jobs.get()), len(image_paths) or 1)
             self.queue.put(("log", f"Selected profile: {setting['path'].name}"))
+            self.queue.put(("log", f"Generation queue: {len(image_paths)} image(s), {parallel_jobs} parallel job(s)."))
             self._log_generation_load_warning(setting)
-            for image_path in list(self.images):
-                if self.shutdown_event.is_set():
-                    self.queue.put(("status", tr(self.lang, "stopped")))
-                    return
+            if parallel_jobs == 1:
                 self._reset_generation_eta()
-                before = {path.resolve() for path in generated_jsons(image_path)}
-                preview_path = generator_preview_path(image_path)
-                if preview_path.exists():
-                    try:
-                        preview_path.unlink()
-                    except OSError:
-                        pass
-                self.queue.put(("log", f"Generating: {image_path}"))
-                self.queue.put(("preview", render_source_image(image_path)))
-                flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-                cmd = build_generator_command(image_path, setting)
-                self._record_detail(f"GENERATOR COMMAND: {self._format_command(cmd)}")
-                self.queue.put(("log", f"Running GPU generator with {setting['path'].name}"))
-                if self.shutdown_event.is_set():
-                    self.queue.put(("status", tr(self.lang, "stopped")))
-                    return
-                proc = self._popen_registered(
-                    cmd,
-                    cwd=ROOT,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    bufsize=1,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    creationflags=flags,
-                )
-                if proc is None:
-                    self.queue.put(("status", tr(self.lang, "stopped")))
-                    return
-                with self.generation_lock:
-                    self.current_generator_proc = proc
-
-                last_preview = None
-                last_preview_mtime = None
-                last_generator_message = None
-                output_queue = queue.Queue()
-
-                def _read_generator_output():
-                    try:
-                        for raw_line in proc.stdout:
-                            self._record_detail(f"GENERATOR RAW: {raw_line.rstrip()}")
-                            output_queue.put(raw_line)
-                    finally:
-                        output_queue.put(None)
-
-                reader = threading.Thread(target=_read_generator_output, daemon=True)
-                reader.start()
-
-                def _drain_generator_output():
-                    nonlocal last_generator_message
-                    while True:
-                        try:
-                            raw_line = output_queue.get_nowait()
-                        except queue.Empty:
-                            break
-                        if raw_line is None:
-                            continue
-                        friendly = self.friendly_generator_line(raw_line)
-                        last_generator_message = self.queue_generator_message(friendly, last_generator_message)
-
-                try:
-                    while proc.poll() is None:
-                        if self.shutdown_event.is_set():
-                            self._terminate_process(proc)
-                            self.queue.put(("status", tr(self.lang, "stopped")))
-                            return
-                        _drain_generator_output()
-                        preview_files = generated_preview_files(image_path)
-                        if preview_files:
-                            newest_preview = preview_files[0]
-                            preview_mtime = newest_preview.stat().st_mtime
-                            if preview_mtime != last_preview_mtime:
-                                last_preview_mtime = preview_mtime
-                                self.queue.put(("preview_file", newest_preview))
-                        newest = generated_jsons(image_path)
-                        if newest and newest[0] != last_preview:
-                            last_preview = newest[0]
-                        time.sleep(0.1)
+                for image_path in image_paths:
                     if self.shutdown_event.is_set():
+                        self.queue.put(("status", tr(self.lang, "stopped")))
                         return
-                    reader.join(timeout=1)
-                    _drain_generator_output()
-                finally:
-                    self._unregister_process(proc)
-                    with self.generation_lock:
-                        if self.current_generator_proc is proc:
-                            self.current_generator_proc = None
-                if proc.returncode != 0:
-                    self._record_detail(f"GENERATOR EXIT: {proc.returncode}")
-                    self.queue.put(("log", self._generator_exit_message(proc.returncode)))
-                    self.queue.put(("status", tr(self.lang, "failed")))
-                    return
-                self._record_detail("GENERATOR EXIT: 0")
-                after = generated_jsons(image_path)
-                new_outputs = best_geometry_jsons([path for path in after if path.resolve() not in before])
-                if not new_outputs and after:
-                    new_outputs = best_geometry_jsons(after[:1])
-                if not new_outputs:
-                    self.queue.put(("log", "Generator finished but no JSON output was found."))
-                    self.queue.put(("status", tr(self.lang, "failed")))
-                    return
-                for output in new_outputs:
-                    if output not in self.outputs:
-                        self.outputs.append(output)
-                    if output not in self.json_files:
-                        self.json_files.append(output)
-                    self.queue.put(("log", f"Generated: {output}"))
-                    preview_files = generated_preview_files(image_path)
-                    if preview_files:
-                        self.queue.put(("preview_file", preview_files[0]))
-                    else:
-                        self.queue.put(("preview", render_geometry_json(output)))
+                    if not self._generate_one_image(image_path, setting, show_eta=True):
+                        return
+            else:
+                with ThreadPoolExecutor(max_workers=parallel_jobs) as executor:
+                    futures = [
+                        executor.submit(self._generate_one_image, image_path, setting, False)
+                        for image_path in image_paths
+                    ]
+                    for future in as_completed(futures):
+                        if not future.result():
+                            stopped = self.shutdown_event.is_set()
+                            if not stopped:
+                                self.shutdown_event.set()
+                            self.queue.put(("status", tr(self.lang, "stopped") if stopped else tr(self.lang, "failed")))
+                            return
             self.queue.put(("render_lists", None))
             self.queue.put(("status", tr(self.lang, "done")))
         except Exception as exc:
@@ -1557,6 +1496,130 @@ class App:
             self.queue.put(("status", tr(self.lang, "failed")))
         finally:
             self.queue.put(("generation_done", None))
+
+    def _generate_one_image(self, image_path, setting, show_eta):
+        prefix = image_path.name
+        if self.shutdown_event.is_set():
+            self.queue.put(("status", tr(self.lang, "stopped")))
+            return False
+        before = {path.resolve() for path in generated_jsons(image_path)}
+        preview_path = generator_preview_path(image_path)
+        if preview_path.exists():
+            try:
+                preview_path.unlink()
+            except OSError:
+                pass
+        self.queue.put(("log", f"{prefix}: Generating {image_path}"))
+        self.queue.put(("preview", render_source_image(image_path)))
+        flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+        cmd = build_generator_command(image_path, setting)
+        self._record_detail(f"GENERATOR COMMAND [{prefix}]: {self._format_command(cmd)}")
+        self.queue.put(("log", f"{prefix}: Running GPU generator with {setting['path'].name}"))
+        if self.shutdown_event.is_set():
+            self.queue.put(("status", tr(self.lang, "stopped")))
+            return False
+        proc = self._popen_registered(
+            cmd,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=flags,
+        )
+        if proc is None:
+            self.queue.put(("status", tr(self.lang, "stopped")))
+            return False
+        with self.generation_lock:
+            self.current_generator_proc = proc
+            self.current_generator_procs.add(proc)
+
+        last_preview = None
+        last_preview_mtime = None
+        last_generator_message = None
+        output_queue = queue.Queue()
+
+        def _read_generator_output():
+            try:
+                for raw_line in proc.stdout:
+                    self._record_detail(f"GENERATOR RAW [{prefix}]: {raw_line.rstrip()}")
+                    output_queue.put(raw_line)
+            finally:
+                output_queue.put(None)
+
+        reader = threading.Thread(target=_read_generator_output, daemon=True)
+        reader.start()
+
+        def _drain_generator_output():
+            nonlocal last_generator_message
+            while True:
+                try:
+                    raw_line = output_queue.get_nowait()
+                except queue.Empty:
+                    break
+                if raw_line is None:
+                    continue
+                friendly = self.friendly_generator_line(raw_line)
+                last_generator_message = self.queue_generator_message(friendly, last_generator_message, prefix=prefix, show_eta=show_eta)
+
+        try:
+            while proc.poll() is None:
+                if self.shutdown_event.is_set():
+                    self._terminate_process(proc)
+                    self.queue.put(("status", tr(self.lang, "stopped")))
+                    return False
+                _drain_generator_output()
+                preview_files = generated_preview_files(image_path)
+                if preview_files:
+                    newest_preview = preview_files[0]
+                    preview_mtime = newest_preview.stat().st_mtime
+                    if preview_mtime != last_preview_mtime:
+                        last_preview_mtime = preview_mtime
+                        self.queue.put(("preview_file", newest_preview))
+                newest = generated_jsons(image_path)
+                if newest and newest[0] != last_preview:
+                    last_preview = newest[0]
+                time.sleep(0.1)
+            if self.shutdown_event.is_set():
+                return False
+            reader.join(timeout=1)
+            _drain_generator_output()
+        finally:
+            self._unregister_process(proc)
+            with self.generation_lock:
+                self.current_generator_procs.discard(proc)
+                if self.current_generator_proc is proc:
+                    self.current_generator_proc = None
+        if proc.returncode != 0:
+            self._record_detail(f"GENERATOR EXIT [{prefix}]: {proc.returncode}")
+            self.queue.put(("log", f"{prefix}: {self._generator_exit_message(proc.returncode)}"))
+            self.queue.put(("status", tr(self.lang, "failed")))
+            return False
+        self._record_detail(f"GENERATOR EXIT [{prefix}]: 0")
+        after = generated_jsons(image_path)
+        new_outputs = best_geometry_jsons([path for path in after if path.resolve() not in before])
+        if not new_outputs and after:
+            new_outputs = best_geometry_jsons(after[:1])
+        if not new_outputs:
+            self.queue.put(("log", f"{prefix}: Generator finished but no JSON output was found."))
+            self.queue.put(("status", tr(self.lang, "failed")))
+            return False
+        for output in new_outputs:
+            with self.generation_lock:
+                if output not in self.outputs:
+                    self.outputs.append(output)
+                if output not in self.json_files:
+                    self.json_files.append(output)
+            self.queue.put(("log", f"{prefix}: Generated {output}"))
+            preview_files = generated_preview_files(image_path)
+            if preview_files:
+                self.queue.put(("preview_file", preview_files[0]))
+            else:
+                self.queue.put(("preview", render_geometry_json(output)))
+        self.queue.put(("render_lists", None))
+        return True
 
     def open_output_folder(self):
         folder = None
@@ -1890,6 +1953,7 @@ class App:
                 with self.generation_lock:
                     self.generation_running = False
                     self.current_generator_proc = None
+                    self.current_generator_procs.clear()
                 if hasattr(self, "generate_button"):
                     self.generate_button.config(state="normal")
                 if hasattr(self, "stop_generate_button"):
